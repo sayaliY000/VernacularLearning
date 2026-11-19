@@ -49,6 +49,8 @@ fun HomeScreen() {
         LearningFeature("Flashcards", "Learn new words", "🃏")
     )
     var showTranslation by remember { mutableStateOf(false) }
+    var showFlashcards by remember { mutableStateOf(false) }
+    var showWorksheets by remember { mutableStateOf(false) }
     var backendStatus by remember {
         mutableStateOf("Backend not tested yet")
     }
@@ -60,6 +62,17 @@ fun HomeScreen() {
         return
     }
 
+    if (showFlashcards) {
+        FlashcardsScreen(
+            onBack = { showFlashcards = false }
+        )
+        return
+    }
+
+    if (showWorksheets) {
+        WorksheetsScreen(onBack = { showWorksheets = false })
+        return
+    }
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFF5F7FC)
@@ -107,8 +120,10 @@ fun HomeScreen() {
                 items(features) { feature ->
                     Card(
                         onClick = {
-                            if (feature.title == "Translate") {
-                                showTranslation = true
+                            when (feature.title) {
+                                "Translate" -> showTranslation = true
+                                "Flashcards" -> showFlashcards = true
+                                "Worksheets" -> showWorksheets = true
                             }
                         },
                         modifier = Modifier

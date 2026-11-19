@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.sp
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 
 @Composable
 fun TranslationScreen(
@@ -29,6 +31,36 @@ fun TranslationScreen(
     var isListening by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+
+    var tts by remember {
+        mutableStateOf<TextToSpeech?>(null)
+    }
+
+    var isTtsReady by remember {
+        mutableStateOf(false)
+    }
+
+    DisposableEffect(context) {
+        val speechEngine = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val languageResult = tts?.setLanguage(
+                    Locale.forLanguageTag("sat")
+                )
+
+                isTtsReady =
+                    languageResult != TextToSpeech.LANG_MISSING_DATA &&
+                            languageResult != TextToSpeech.LANG_NOT_SUPPORTED &&
+                            languageResult != null
+            }
+        }
+
+        tts = speechEngine
+
+        onDispose {
+            speechEngine.stop()
+            speechEngine.shutdown()
+        }
+    }
 
     val speechLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -131,6 +163,24 @@ fun TranslationScreen(
             }
         } else {
             Text("Your translation will appear here.")
+        }
+        if (resultMessage.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = {
+                    tts?.speak(
+                        resultMessage,
+                        TextToSpeech.QUEUE_FLUSH,
+                        null,
+                        "SANTALI_TRANSLATION"
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isTtsReady
+            ) {
+                Text("🔊 Listen in Santali")
+            }
         }
 
         if (errorMessage.isNotEmpty()) {
